@@ -1,0 +1,2 @@
+[Error][2018.08.16 02:57:21 / ERROR /         60] RES_MESSAGE - No Send Chat, but My Chat recv (My AccountNo:90)
+[Error][2018.08.16 02:57:45 / ERROR /     126864] RES_MESSAGE - No Send Chat, but My Chat recv (My AccountNo:80)

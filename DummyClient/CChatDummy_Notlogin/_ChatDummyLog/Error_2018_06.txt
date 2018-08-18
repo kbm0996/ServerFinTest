@@ -1,0 +1,25 @@
+[Error][2018.06.22 02:25:44 / ERROR /      48892] Check sum Error [AccountNo:10360]
+[Error][2018.06.22 02:25:44 / ERROR /      48893] Check sum Error [AccountNo:11321]
+[Error][2018.06.22 02:25:44 / ERROR /      48894] RES_LOGIN - Account No Error (My:10096  Recv:10097)
+[Error][2018.06.22 02:25:44 / ERROR /      48895] Check sum Error [AccountNo:11134]
+[Error][2018.06.22 02:25:44 / ERROR /      48896] Check sum Error [AccountNo:10306]
+[Error][2018.06.22 02:25:44 / ERROR /      48897] RES_LOGIN - Account No Error (My:11179  Recv:11180)
+[Error][2018.06.22 02:25:44 / ERROR /      48898] Check sum Error [AccountNo:11483]
+[Error][2018.06.22 02:25:44 / ERROR /      48899] RES_LOGIN - Account No Error (My:10528  Recv:690094081)
+[Error][2018.06.22 02:25:44 / ERROR /      48900] Check sum Error [AccountNo:10371]
+[Error][2018.06.22 02:25:44 / ERROR /      48901] Check sum Error [AccountNo:10374]
+[Error][2018.06.22 02:25:44 / ERROR /      48902] Check sum Error [AccountNo:10210]
+[Error][2018.06.22 02:25:44 / ERROR /      48903] RES_LOGIN - Account No Error (My:10387  Recv:680787969)
+[Error][2018.06.22 02:25:44 / ERROR /      48904] RES_LOGIN - Account No Error (My:10765  Recv:10768)
+[Error][2018.06.22 02:25:45 / ERROR /      48905] Check sum Error [AccountNo:10135]
+[Error][2018.06.22 02:25:45 / ERROR /      48906] Check sum Error [AccountNo:10143]
+[Error][2018.06.22 02:25:45 / ERROR /      48907] Check sum Error [AccountNo:10683]
+[Error][2018.06.22 02:25:45 / ERROR /      48908] Check sum Error [AccountNo:10463]
+[Error][2018.06.22 02:25:45 / ERROR /      48909] RES_SECTOR_MOVE - AccountNo Error (My:10470  Recv:10497)
+[Error][2018.06.22 02:25:45 / ERROR /      48910] RES_LOGIN - Account No Error (My:10734  Recv:10735)
+[Error][2018.06.22 02:25:45 / ERROR /      48911] Check sum Error [AccountNo:10958]
+[Error][2018.06.22 02:25:45 / ERROR /      48912] Check sum Error [AccountNo:10292]
+[Error][2018.06.22 02:25:45 / ERROR /      48913] Check sum Error [AccountNo:10042]
+[Error][2018.06.22 02:25:45 / ERROR /      48914] Check sum Error [AccountNo:10867]
+[Error][2018.06.22 02:25:45 / ERROR /      48915] Check sum Error [AccountNo:10872]
+[Error][2018.06.22 02:25:45 / ERROR /      48916] Check sum Error [AccountNo:11211]
