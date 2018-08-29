@@ -1,8 +1,6 @@
 #ifndef __DB_ACCOUNT__
 #define __DB_ACCOUNT__
 
-// TODO: other code
-
 #pragma comment(lib, "../../../MyLibrary/MyLib/x64/Release/MyLib.lib")
 #include "MyLib.h"
 #include "CDBConnector_TLS.h"
