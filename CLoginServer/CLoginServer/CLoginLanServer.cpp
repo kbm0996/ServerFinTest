@@ -55,7 +55,7 @@ void CLoginLanServer::OnRecv(UINT64 SessionID, CNPacket * pPacket)
 	switch (wPacketType)
 	{
 	case en_PACKET_SS_LOGINSERVER_LOGIN:
-		ReqLoginServerLogin(SessionID, pPacket);
+		proc_PACKET_SS_LOGINSERVER_LOGIN(SessionID, pPacket);
 		break;
 	case en_PACKET_SS_RES_NEW_CLIENT_LOGIN:
 		proc_PACKET_SS_RES_NEW_CLIENT_LOGIN(SessionID, pPacket);
@@ -91,7 +91,7 @@ CLoginLanServer::st_SERVER * CLoginLanServer::SearchServer(UINT64 iSessionID)
 	return pServer;
 }
 
-void CLoginLanServer::ReqLoginServerLogin(UINT64 iSessionID, CNPacket * pPacket)
+void CLoginLanServer::proc_PACKET_SS_LOGINSERVER_LOGIN(UINT64 iSessionID, CNPacket * pPacket)
 {
 	//------------------------------------------------------------
 	// 다른 서버가 로그인 서버로 로그인.

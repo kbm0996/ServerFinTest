@@ -73,8 +73,6 @@ public:
 	int _iPacketPool_Login;
 	//dfMONITOR_DATA_TYPE_MATCH_SESSION,                          // 매치메이킹 접속 세션
 	int _iSessionAll_Login;
-	//dfMONITOR_DATA_TYPE_MATCH_PLAYER,                           // 매치메이킹 접속 유저 (로그인 성공 후)
-	//int _iSessionSuccess_Login;
 	//dfMONITOR_DATA_TYPE_MATCH_MATCHSUCCESS,                     // 매치메이킹 방 배정 성공 수 (초당)
 	int _iLoginSuccessTps_Login;
 
@@ -117,7 +115,8 @@ public:
 	int _iSessionAll_Chat;
 	//dfMONITOR_DATA_TYPE_CHAT_PLAYER,                            // 채팅서버 로그인을 성공한 전체 인원
 	int _iSessionLogin_Chat;
-	//dfMONITOR_DATA_TYPE_CHAT_ROOM                               // 배틀서버 방 수
+	int _iMsgPool_Chat;
+	int _iMsgTps_Chat;
 };
 
 #endif

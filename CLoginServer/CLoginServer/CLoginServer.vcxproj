@@ -164,6 +164,8 @@
     <ClInclude Include="MonitorProtocol.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="_accountdb.sql" />
+    <None Include="_Dummy_InsertQuery.sql" />
     <None Include="_LoginServer.cnf" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

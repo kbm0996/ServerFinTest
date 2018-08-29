@@ -2,12 +2,13 @@
 
 CChatServer::CChatServer()
 {
-	LOG_SET(LOG_CONSOLE | LOG_FILE, LOG_ERROR, L"CHAT_SERVER_LOG");
+	LOG_SET(LOG_CONSOLE | LOG_FILE, LOG_DEBUG, L"CHAT_SERVER_LOG");
 	if (!InitPDH())
 		CRASH();
 
-	_lPlayerCnt = 0;
-	_lSessionMissCnt = 0;
+	_lMonitor_PlayerCnt = 0;
+	_lMonitor_SessionMissCnt = 0;
+	_lMonitor_UpdateTps = 0;
 
 	_pLoginClient = nullptr;
 	_pMonitorClient = nullptr;
@@ -81,10 +82,11 @@ bool CChatServer::Start()
 
 		++iTry;
 	}
+	/////////////////////////////////////////////////////////////////////////////////
+
 
 	if (!CNetServer::Start(CConfig::_szBindIP, CConfig::_iBindPort, CConfig::_iWorkerThreadNo, false, CConfig::_iClientMax, CConfig::_byPacketCode, CConfig::_byPacketKey1, CConfig::_byPacketKey2))
 		return false;
-	/////////////////////////////////////////////////////////////////////////////////
 
 
 	iTry = 0;
@@ -161,12 +163,12 @@ void CChatServer::Monitoring()
 	wprintf(L" Chat Server\n");
 	wprintf(L"===========================================\n");
 	wprintf(L" - MessagePool		: %d/%d \n", _MessagePool.GetUseSize(), _MessagePool.GetAllocSize());
-	wprintf(L" - MessageQueue		: %d \n", _MessageQ.GetUseSize());		// UpdateThread 큐 남은 개수
+	wprintf(L" - MessageTPS		: %d \n", _lMonitor_UpdateTps);		// UpdateThread 큐 남은 개수
 	wprintf(L"\n");
 	wprintf(L" - PlayerPool		: %d \n", _PlayerPool.GetAllocSize());		// Player 구조체 할당량
-	wprintf(L" - PlayerCount		: %lld \n", _lPlayerCnt);	// Contents 파트 Player 개수
+	wprintf(L" - PlayerCount		: %lld \n", _lMonitor_PlayerCnt);	// Contents 파트 Player 개수
 	wprintf(L"\n");
-	wprintf(L" - SessionKey Miss	: %lld \n", _lSessionMissCnt);
+	wprintf(L" - SessionKey Miss	: %lld \n", _lMonitor_SessionMissCnt);
 	if (_pLoginClient != nullptr)
 		wprintf(L" - LoginMap Size	: %d \n", _pLoginClient->LoginMap_Size());
 
@@ -207,17 +209,22 @@ void CChatServer::Monitoring()
 			//dfMONITOR_DATA_TYPE_CHAT_PACKET_POOL,                       // 채팅서버 패킷풀 사용량
 			//dfMONITOR_DATA_TYPE_CHAT_SESSION,                           // 채팅서버 접속 세션전체
 			//dfMONITOR_DATA_TYPE_CHAT_PLAYER,                            // 채팅서버 로그인을 성공한 전체 인원
-			///dfMONITOR_DATA_TYPE_CHAT_ROOM                               // 배틀서버 방 수
+			//dfMONITOR_DATA_TYPE_CHAT_UPDATEMSG_POOL,
+			//dfMONITOR_DATA_TYPE_CHAT_UPDATEMSG_TPS
 			int iUsePacketCnt = CNPacket::GetUseSize();
 			_pMonitorClient->SendData(dfMONITOR_DATA_TYPE_CHAT_SERVER_ON, TRUE);
 			_pMonitorClient->SendData(dfMONITOR_DATA_TYPE_CHAT_CPU, _CPUTime.ProcessTotal());
 			_pMonitorClient->SendData(dfMONITOR_DATA_TYPE_CHAT_MEMORY_COMMIT, Counter.doubleValue / 1024 / 1024);
 			_pMonitorClient->SendData(dfMONITOR_DATA_TYPE_CHAT_PACKET_POOL, iUsePacketCnt);
+
 			_pMonitorClient->SendData(dfMONITOR_DATA_TYPE_CHAT_SESSION, _lConnectCnt);
-			_pMonitorClient->SendData(dfMONITOR_DATA_TYPE_CHAT_PLAYER, _lPlayerCnt);
-			///_pMonitorClient->SendData(dfMONITOR_DATA_TYPE_CHAT_ROOM, _Monitor_SessionGameMode);
+			_pMonitorClient->SendData(dfMONITOR_DATA_TYPE_CHAT_PLAYER, _lMonitor_PlayerCnt);
+			_pMonitorClient->SendData(dfMONITOR_DATA_TYPE_CHAT_UPDATEMSG_POOL, _MessagePool.GetUseSize());
+			_pMonitorClient->SendData(dfMONITOR_DATA_TYPE_CHAT_UPDATEMSG_TPS, _lMonitor_UpdateTps);
 		}
 	}
+
+	_lMonitor_UpdateTps = 0;
 }
 
 bool CChatServer::OnConnectRequest(WCHAR * wszIP, int iPort)
@@ -290,6 +297,8 @@ unsigned int CChatServer::UpdateThread_Process()
 			if (pMessage == nullptr)
 				break;
 
+			++_lMonitor_UpdateTps;
+
 			switch (pMessage->wType)
 			{
 			case en_MSG_JOIN:
@@ -336,7 +345,7 @@ void CChatServer::proc_MSG_LEAVE(st_MESSAGE * pMessage)
 		return;
 
 	if (pPlayer->iAccountNo != 0)
-		--_lPlayerCnt;
+		--_lMonitor_PlayerCnt;
 
 	// 소속된 섹터에서 지우기
 	LeaveSector(pPlayer);
@@ -369,7 +378,7 @@ void CChatServer::proc_MSG_PACKET(st_MESSAGE * pMessage)
 		proc_PACKET_CS_CHAT_REQ_HEARTBEAT(pMessage->iSessionID, pPacket);
 		break;
 	default:
-		LOG(L"CHAT_SERVER_LOG", LOG_ERROR, L"PacketType Error : %d", wPacketType);
+		LOG(L"CHAT_SERVER_LOG", LOG_WARNG, L"Unknown PacketType %d", wPacketType);
 		DisconnectSession(pMessage->iSessionID);
 		break;
 	}
@@ -496,7 +505,7 @@ void CChatServer::proc_PACKET_CS_CHAT_REQ_LOGIN(UINT64 iSessionID, CNPacket * pP
 	st_PLAYER *pPlayer = SearchPlayer(iSessionID);
 	if (pPlayer == nullptr)
 	{
-		LOG(L"CHAT_SERVER_LOG", LOG_WARNG, L"Player Not Find");
+		LOG(L"CHAT_SERVER_LOG", LOG_ERROR, L"Player Not Find");
 		DisconnectSession(iSessionID);
 		return;
 	}
@@ -517,7 +526,7 @@ void CChatServer::proc_PACKET_CS_CHAT_REQ_LOGIN(UINT64 iSessionID, CNPacket * pP
 		}
 	}
 
-	++_lPlayerCnt;
+	++_lMonitor_PlayerCnt;
 
 	CNPacket* pSendPacket = CNPacket::Alloc();
 	mp_PACKET_CS_CHAT_RES_LOGIN(pSendPacket, byResult, pPlayer->iAccountNo);
@@ -561,13 +570,13 @@ void CChatServer::proc_PACKET_CS_CHAT_REQ_SECTOR_MOVE(UINT64 iSessionID, CNPacke
 
 	if (pPlayer->iAccountNo != iAccountNo)
 	{
-		LOG(L"CHAT_SERVER_LOG", LOG_ERROR, L"Packet AccountNo Error Player : %lld != %lld", pPlayer->iAccountNo, iAccountNo);
+		LOG(L"CHAT_SERVER_LOG", LOG_WARNG, L"Packet AccountNo Error Player : %lld != %lld", pPlayer->iAccountNo, iAccountNo);
 		DisconnectSession(iSessionID);
 		return;
 	}
 	if (!SetSector(pPlayer, shSectorX, shSectorY))
 	{
-		LOG(L"CHAT_SERVER_LOG", LOG_ERROR, L"SetSector() Error");
+		LOG(L"CHAT_SERVER_LOG", LOG_WARNG, L"SetSector Out of Range");
 		DisconnectSession(iSessionID);
 		return;
 	}

@@ -239,8 +239,8 @@ enum en_PACKET_SS_MONITOR_DATA_UPDATE
 	dfMONITOR_DATA_TYPE_CHAT_PACKET_POOL,                       // 채팅서버 패킷풀 사용량
 	dfMONITOR_DATA_TYPE_CHAT_SESSION,                           // 채팅서버 접속 세션전체
 	dfMONITOR_DATA_TYPE_CHAT_PLAYER,                            // 채팅서버 로그인을 성공한 전체 인원
-	dfMONITOR_DATA_TYPE_CHAT_ROOM                               // 배틀서버 방 수
-
+	dfMONITOR_DATA_TYPE_CHAT_UPDATEMSG_POOL,
+	dfMONITOR_DATA_TYPE_CHAT_UPDATEMSG_TPS
 };
 
 

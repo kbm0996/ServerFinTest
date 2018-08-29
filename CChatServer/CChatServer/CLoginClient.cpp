@@ -190,12 +190,12 @@ bool CLoginClient::LoginMap_Remove(INT64 iAccountNo, char * szSessionKey)
 		char szOriginKey[65] = { 0 };
 		char szNewKey[65] = { 0 };
 
-		InterlockedIncrement64(&_pChatServer->_lSessionMissCnt);
+		InterlockedIncrement64(&_pChatServer->_lMonitor_SessionMissCnt);
 		
 		memcpy_s(&szOriginKey, sizeof(szOriginKey), pInfo->szSessionKey, sizeof(st_LOGIN_INFO::szSessionKey));
 		memcpy_s(&szNewKey, sizeof(szNewKey), szSessionKey, sizeof(st_LOGIN_INFO::szSessionKey));
 
-		LOG(L"LOGIN_CLIENT_LOG", LOG_WARNG, L"%d Account SessionKey Mismatch %s : %s", iAccountNo, szOriginKey, szNewKey);
+		LOG(L"LOGIN_CLIENT_LOG", LOG_WARNG, L"%d Account SessionKey Mismatch", iAccountNo);
 		ReleaseSRWLockExclusive(&_srwLoginMap);
 		return false;
 	}
@@ -217,7 +217,7 @@ void CLoginClient::LoginMap_Timeout()
 		st_LOGIN_INFO* pInfo = (*Iter).second;
 		if (GetTickCount64() - pInfo->lLastRecvTick > en_INFO_TIMEOUT)
 		{
-			///LOG(L"LOGIN_CLIENT_LOG", LOG_DEBUG, L"%d Account Timeout", (*Iter).second->iAccountNo);
+			LOG(L"LOGIN_CLIENT_LOG", LOG_WARNG, L"%d Account Timeout", (*Iter).second->iAccountNo);
 			Iter = _LoginMap.erase(Iter);
 			_LogininfoPool->Free(pInfo);
 			continue;

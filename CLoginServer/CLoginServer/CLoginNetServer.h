@@ -24,10 +24,12 @@ public:
 		en_MSG_JOIN = 0,
 		en_MSG_LEAVE,
 		en_MSG_PACKET,
-		en_MSG_HEARTBEAT,
+
+		// Thread
+		en_THREAD_SLEEP_UPDATE = 10000,
 
 		// Heartbeat timeout
-		en_TIME_OUT = 60000
+		en_TIMEOUT = 60000
 	};
 	struct st_PLAYER
 	{
@@ -71,6 +73,7 @@ private:
 	// Server to Server
 	// LanServer ::  void proc_PACKET_SS_RES_NEW_CLIENT_LOGIN(UINT64 iSessionID, CNPacket *pPacket);
 	/* NetServer ::*/void comp_PACKET_SS_RES_NEW_CLIENT_LOGIN(BYTE byServerType, INT64 iAccountNo, INT64 iParameter);
+	
 	void mpResLogin(CNPacket * pBuffer, INT64 iAccountNo, BYTE byStatus, WCHAR* szID, WCHAR* szNick);
 
 
@@ -95,9 +98,11 @@ protected:
 
 
 private:
+	static unsigned int __stdcall UpdateThread(LPVOID pCLoginNetServer);
+	unsigned int UpdateThread_Process();
+
 	// Thread
 	HANDLE	_hUpdateThread;
-	HANDLE	_hUpdateEvent;
 	bool	_bShutdown;
 	bool	_bControlMode;
 
@@ -109,11 +114,11 @@ private:
 	// Monitoring
 	CMonitorClient* _pMonitorClient;
 
-	LONG64		_lLoginRequestCnt;
-	LONG64		_lLoginSuccessTps;
-	ULONGLONG	_lLoginSuccessTime_Min;
-	ULONGLONG	_lLoginSuccessTime_Max;
-	ULONGLONG	_lLoginSuccessTime_Cnt;
+	LONG64		_lMonitor_LoginRequestCnt;
+	LONG64		_lMonitor_LoginSuccessTps;
+	ULONGLONG	_lMonitor_LoginSuccessTime_Min;
+	ULONGLONG	_lMonitor_LoginSuccessTime_Max;
+	ULONGLONG	_lMonitor_LoginSuccessTime_Cnt;
 
 	// CPU Usage
 	CCpuUsage		_CPUTime;

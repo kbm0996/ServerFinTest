@@ -61,5 +61,11 @@
     <None Include="_LoginServer.cnf">
       <Filter>리소스 파일</Filter>
     </None>
+    <None Include="_Dummy_InsertQuery.sql">
+      <Filter>리소스 파일</Filter>
+    </None>
+    <None Include="_accountdb.sql">
+      <Filter>리소스 파일</Filter>
+    </None>
   </ItemGroup>
 </Project>

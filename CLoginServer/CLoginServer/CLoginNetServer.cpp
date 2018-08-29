@@ -12,26 +12,24 @@ CLoginServer::CLoginServer()
 		CRASH();
 
 	// Thread
-	_hUpdateThread;
-	_hUpdateEvent;
 	_bShutdown = false;
 	_bControlMode = false;
 
 	// Monitoring
-	_lLoginRequestCnt = 0;
-	_lLoginSuccessTps = 0;
-	_lLoginSuccessTime_Min = 9999999;
-	_lLoginSuccessTime_Max = 0;
-	_lLoginSuccessTime_Cnt = 0;
+	_lMonitor_LoginRequestCnt = 0;
+	_lMonitor_LoginSuccessTps = 0;
+	_lMonitor_LoginSuccessTime_Min = 9999999;
+	_lMonitor_LoginSuccessTime_Max = 0;
+	_lMonitor_LoginSuccessTime_Cnt = 0;
 
 	// Server to Server
 	_bConnectChatServer = false;
 
 	InitializeSRWLock(&_srwPlayerLock);
 
-	_pLoginLanServer = nullptr;
-	_pDBAccount = nullptr;
-	_pMonitorClient = nullptr;
+	_pDBAccount = new CDBAccount(CConfig::_szDBIP, CConfig::_szDBAccount, CConfig::_szDBPassword, CConfig::_szDBName, CConfig::_iDBPort);
+	_pMonitorClient = new CMonitorClient();
+	_pLoginLanServer = new CLoginLanServer(this);
 }
 
 CLoginServer::~CLoginServer()
@@ -93,22 +91,12 @@ bool CLoginServer::InitPDH()
 
 bool CLoginServer::Start()
 {
+	_bShutdown = false;
 
-	_pDBAccount = new CDBAccount(CConfig::_szDBIP, CConfig::_szDBAccount, CConfig::_szDBPassword, CConfig::_szDBName, CConfig::_iDBPort);
-	_pDBAccount->ReadDB(CDBAccount::en_ACCOUNT_STATUS_INIT);
+	_hUpdateThread = (HANDLE)_beginthreadex(NULL, 0, UpdateThread, this, 0, NULL);
+	
+	_pDBAccount->InitDB();
 
-	int iTry = 0;
-	_pMonitorClient = new CMonitorClient();
-	while (!_pMonitorClient->Start(CConfig::_szMonitoringLanIP, CConfig::_iMonitoringLanPort, 1, false))
-	{
-		_pMonitorClient->Stop(true);
-		if (iTry > 3)
-			break;
-
-		++iTry;
-	}
-
-	_pLoginLanServer = new CLoginLanServer(this);
 	if (!_pLoginLanServer->Start(CConfig::_szLanBindIP, CConfig::_iLanBindPort, CConfig::_iWorkerThreadNo/2, false, 3))
 	{
 		LOG(L"LOGIN_NET_SERVER_LOG", LOG_ERROR, L"LanServer Start Error");
@@ -120,11 +108,19 @@ bool CLoginServer::Start()
 		LOG(L"LOGIN_NET_SERVER_LOG", LOG_ERROR, L"NetServer Start Error");
 		return false;
 	}
+
+	_pMonitorClient->Start(CConfig::_szMonitoringLanIP, CConfig::_iMonitoringLanPort, 1, false);
+
 	return true;
 }
 
 void CLoginServer::Stop()
 {
+	_bShutdown = true;
+
+	WaitForSingleObject(_hUpdateThread, INFINITE);
+	CloseHandle(_hUpdateThread);
+
 	CNetServer::Stop();
 }
 
@@ -143,30 +139,19 @@ void CLoginServer::Monitoring()
 		dPrivateMemory = Counter.doubleValue / 1024 / 1024;
 	}
 
-	///////////////////////////////////////////////////
 	// Login 처리 평균 소요 시간
 	ULONGLONG lLoginSuccessTime_Avr = 0;
-	ULONGLONG lLoginSuccessTime_Min;
-
-	if (_lLoginRequestCnt > 2)
-		lLoginSuccessTime_Avr = (_lLoginSuccessTime_Cnt - _lLoginSuccessTime_Min - _lLoginSuccessTime_Max) / (_lLoginRequestCnt - 2);
-	
-	lLoginSuccessTime_Min = _lLoginSuccessTime_Min;
-	if (_lLoginSuccessTime_Min == 9999999)
-	{
-		lLoginSuccessTime_Avr = _lLoginSuccessTime_Max;
-		lLoginSuccessTime_Min = 0;
-	}
-	/////////////////////////////////////////////////////
+	if (_lMonitor_LoginRequestCnt > 2)
+		lLoginSuccessTime_Avr = (_lMonitor_LoginSuccessTime_Cnt - _lMonitor_LoginSuccessTime_Max - _lMonitor_LoginSuccessTime_Min) / (_lMonitor_LoginRequestCnt - 2);
 
 	wprintf(L"===========================================\n");
 	wprintf(L" Login Net Server\n");
 	wprintf(L"===========================================\n");
-	wprintf(L" - LoginSuccess TPS	: %lld \n", _lLoginSuccessTps);		
+	wprintf(L" - LoginSuccess TPS	: %lld \n", _lMonitor_LoginSuccessTps);		
 	//wprintf(L" - LoginWait		: %d \n");
 	wprintf(L"\n");
 	wprintf(L" - CompleteTime Avr	: %lld \n", lLoginSuccessTime_Avr);
-	wprintf(L"	Min / Max	: %lld / %lld ms\n", lLoginSuccessTime_Min, _lLoginSuccessTime_Max);
+	wprintf(L"	Min / Max	: %lld / %lld ms\n", _lMonitor_LoginSuccessTime_Min, _lMonitor_LoginSuccessTime_Max);
 
 	CNetServer::PrintState(true, true, true, true);
 	//_pLoginLanServer->PrintState(true);
@@ -196,11 +181,11 @@ void CLoginServer::Monitoring()
 		_pMonitorClient->SendData(dfMONITOR_DATA_TYPE_MATCH_CPU, _CPUTime.ProcessTotal());
 		_pMonitorClient->SendData(dfMONITOR_DATA_TYPE_MATCH_MEMORY_COMMIT, Counter.doubleValue / 1024 / 1024);
 		_pMonitorClient->SendData(dfMONITOR_DATA_TYPE_MATCH_PACKET_POOL, iUsePacketCnt);
+
 		_pMonitorClient->SendData(dfMONITOR_DATA_TYPE_MATCH_SESSION, _lConnectCnt);
-		//_pMonitorClient->SendData(dfMONITOR_DATA_TYPE_MATCH_PLAYER, _lLoginSuccessCnt);
-		_pMonitorClient->SendData(dfMONITOR_DATA_TYPE_MATCH_MATCHSUCCESS, _lLoginSuccessTps);
+		_pMonitorClient->SendData(dfMONITOR_DATA_TYPE_MATCH_MATCHSUCCESS, _lMonitor_LoginSuccessTps);
 	}
-	_lLoginSuccessTps = 0;
+	_lMonitor_LoginSuccessTps = 0;
 }
 
 bool CLoginServer::OnConnectRequest(WCHAR * wszIP, int iPort)
@@ -261,14 +246,14 @@ void CLoginServer::OnRecv(UINT64 SessionID, CNPacket * pPacket)
 
 void CLoginServer::OnSend(UINT64 SessionID, int iSendSize)
 {
-	//st_PLAYER* pPlayer = SearchPlayer(SessionID);
-	//if (pPlayer == nullptr)
-	//{
-	//	LOG(L"LOGIN_NET_SERVER_LOG", LOG_WARNG, L"Player Not Find - SessionID:%d", SessionID);
-	//	return;
-	//}
-	//if (pPlayer->iSessionID == SessionID)
-	//	DisconnectSession(SessionID);
+	st_PLAYER* pPlayer = SearchPlayer(SessionID);
+	if (pPlayer == nullptr)
+	{
+		LOG(L"LOGIN_NET_SERVER_LOG", LOG_WARNG, L"Player Not Find - SessionID:%d", SessionID);
+		return;
+	}
+	if (pPlayer->iSessionID == SessionID)
+		DisconnectSession(SessionID);
 }
 
 void CLoginServer::OnError(int iErrCode, WCHAR * wszErr)
@@ -278,6 +263,34 @@ void CLoginServer::OnError(int iErrCode, WCHAR * wszErr)
 void CLoginServer::OnHeartBeat()
 {
 }
+
+unsigned int CLoginServer::UpdateThread(LPVOID pCLoginNetServer)
+{
+	return ((CLoginServer *)pCLoginNetServer)->UpdateThread_Process();
+}
+
+unsigned int CLoginServer::UpdateThread_Process()
+{
+	while (!_bShutdown)
+	{
+		Sleep(en_THREAD_SLEEP_UPDATE);
+
+		AcquireSRWLockExclusive(&_srwPlayerLock);
+		for (auto Iter = _PlayerList.begin(); Iter != _PlayerList.end(); ++Iter)
+		{
+			st_PLAYER* pPlayer = *Iter;
+			if (GetTickCount64() - pPlayer->lLoginReqTick == en_TIMEOUT)
+			{
+				LOG(L"LOGIN_NET_SERVER_LOG", LOG_WARNG, L"%d Account Login Request Timeout", pPlayer->iAccountNo);
+				DisconnectSession(pPlayer->iSessionID);
+				break;
+			}
+		}
+		ReleaseSRWLockExclusive(&_srwPlayerLock);
+	}
+	return 0;
+}
+
 
 CLoginServer::st_PLAYER * CLoginServer::SearchPlayer(UINT64 iSessionID)
 {
@@ -310,7 +323,7 @@ void CLoginServer::proc_PACKET_CS_LOGIN_REQ_LOGIN(UINT64 iSessionID, CNPacket * 
 	//
 	//------------------------------------------------------------
 	BYTE byStatus = 1;
-	st_PLAYER *pPlayer = SearchPlayer(iSessionID);
+	st_PLAYER* pPlayer = SearchPlayer(iSessionID);
 	if (pPlayer == nullptr)
 	{
 		LOG(L"LOGIN_NET_SERVER_LOG", LOG_WARNG, L"Player Not Find - SessionID:%d", iSessionID);
@@ -320,14 +333,14 @@ void CLoginServer::proc_PACKET_CS_LOGIN_REQ_LOGIN(UINT64 iSessionID, CNPacket * 
 	*pPacket >> pPlayer->iAccountNo;
 	pPacket->GetData((char*)pPlayer->szSessionKey, sizeof(pPlayer->szSessionKey));
 
-	InterlockedIncrement64(&_lLoginRequestCnt);
+	InterlockedIncrement64(&_lMonitor_LoginRequestCnt);
 
 	// 채팅 서버와 연결 여부 확인
 	if (!_bConnectChatServer)
 	{
 		pPlayer->byStatus = dfLOGIN_STATUS_NOSERVER;
 
-		CNPacket *Packet = CNPacket::Alloc();
+		CNPacket* Packet = CNPacket::Alloc();
 		mpResLogin(Packet, pPlayer->iAccountNo, pPlayer->byStatus, pPlayer->szID, pPlayer->szNickname);
 		SendPacket(pPlayer->iSessionID, Packet);
 		Packet->Free();
@@ -340,15 +353,15 @@ void CLoginServer::proc_PACKET_CS_LOGIN_REQ_LOGIN(UINT64 iSessionID, CNPacket * 
 	pPlayer->lLoginReqTick = GetTickCount64();
 
 	// TODO : DB
-	CDBAccount::st_SESSIONCHACK_IN pIn;
+	CDBAccount::st_DB_INDATA pIn;
 	pIn.AccountNo = pPlayer->iAccountNo;
 	pIn.SessionKey = pPlayer->szSessionKey;
 
-	CDBAccount::st_SESSIONCHACK_OUT pOut;
+	CDBAccount::st_DB_OUTDATA pOut;
 	pOut.ID = pPlayer->szID;
 	pOut.Nickname = pPlayer->szNickname;
 
-	_pDBAccount->ReadDB(CDBAccount::en_ACCOUNT_SESSION_CHECK, (void*)&pIn, (void*)&pOut);
+	_pDBAccount->ReadDB(&pIn, &pOut);
 	
 	pPlayer->byStatus = pOut.byStatus;
 	if (pPlayer->byStatus != dfLOGIN_STATUS_OK)
@@ -415,21 +428,19 @@ void CLoginServer::comp_PACKET_SS_RES_NEW_CLIENT_LOGIN(BYTE byServerType, INT64 
 
 	if (byServerType == dfSERVER_TYPE_CHAT)
 	{
-		InterlockedIncrement64(&_lLoginSuccessTps);
+		InterlockedIncrement64(&_lMonitor_LoginSuccessTps);
 		pPlayer->byStatus = dfLOGIN_STATUS_OK;
 
 		ULONGLONG lLoginLapseTick = GetTickCount64() - pPlayer->lLoginReqTick;
-		_lLoginSuccessTime_Cnt += lLoginLapseTick;
-		_lLoginSuccessTime_Max = max(lLoginLapseTick, _lLoginSuccessTime_Max);
-		_lLoginSuccessTime_Min = min(lLoginLapseTick, _lLoginSuccessTime_Max);
+		_lMonitor_LoginSuccessTime_Cnt += lLoginLapseTick;
+		_lMonitor_LoginSuccessTime_Max = max(lLoginLapseTick, _lMonitor_LoginSuccessTime_Max);
+		_lMonitor_LoginSuccessTime_Min = min(lLoginLapseTick, _lMonitor_LoginSuccessTime_Max);
 
 		// 클라이언트에 로그인 결과 전송
 		CNPacket *Packet = CNPacket::Alloc();
 		mpResLogin(Packet, pPlayer->iAccountNo, pPlayer->byStatus, pPlayer->szID, pPlayer->szNickname);
 		SendPacket_Disconnect(pPlayer->iSessionID, Packet);
 		Packet->Free();
-
-		pPlayer->lLoginReqTick = -1;
 	}
 }
 
@@ -463,6 +474,6 @@ void CLoginServer::mpResLogin(CNPacket * pBuffer, INT64 iAccountNo, BYTE byStatu
 	pBuffer->PutData((char*)CConfig::_szChatServerIP, sizeof(WCHAR) * 16);
 	*pBuffer << (USHORT)CConfig::_iChatServerPort;
 	// ChatServer
-	pBuffer->PutData((char*)pConfig->_szChatServerIP, sizeof(WCHAR) * 16);
+	pBuffer->PutData((char*)CConfig::_szChatServerIP, sizeof(WCHAR) * 16);
 	*pBuffer << (USHORT)CConfig::_iChatServerPort;
 }

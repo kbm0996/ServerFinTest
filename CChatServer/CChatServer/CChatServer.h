@@ -162,9 +162,9 @@ public:
 	//----------------------------------------------------------------------------
 	// Monitor
 	//----------------------------------------------------------------------------
-	LONG64	_lPlayerCnt;
-	LONG64	_lSessionMissCnt;
-	char	_szSessionKey[64];
+	LONG64	_lMonitor_PlayerCnt;
+	LONG64	_lMonitor_SessionMissCnt;
+	LONG64	_lMonitor_UpdateTps;
 
 	// CPU Usage
 	CCpuUsage		_CPUTime;

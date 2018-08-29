@@ -12,7 +12,6 @@ CMonitorLanServer::CMonitorLanServer()//CMonitorNetServer *pNetServer)
 	_iCommitMemory_Login = 0;
 	_iPacketPool_Login = 0;
 	_iSessionAll_Login = 0;
-	//_iSessionSuccess_Login = 0;
 	_iLoginSuccessTps_Login = 0;
 	// BattleServer
 	_bOnGameServer = 0;		
@@ -74,8 +73,6 @@ void CMonitorLanServer::OnClientLeave(UINT64 SessionID)
 				break;
 			case dfMONITOR_SERVER_TYPE_CHAT:
 				_bOnChatServer = FALSE;
-				break;
-			case dfMONITOR_SERVER_TYPE_AGENT:
 				break;
 			default:
 				break;
@@ -155,8 +152,6 @@ void CMonitorLanServer::ServerList_Timeout()
 			case dfMONITOR_SERVER_TYPE_CHAT:
 				_bOnChatServer = FALSE;
 				break;
-			case dfMONITOR_SERVER_TYPE_AGENT:
-				break;
 			default:
 				break;
 			}
@@ -224,8 +219,6 @@ void CMonitorLanServer::proc_PACKET_SS_MONITOR_LOGIN(UINT64 SessionID, CNPacket 
 			LOG(L"MONITOR_LANSERVER_LOG", LOG_WARNG, L"Already OnChatServer");
 			DisconnectSession(SessionID);
 		}
-		break;
-	case dfMONITOR_SERVER_TYPE_AGENT:
 		break;
 	default:
 		LOG(L"MONITOR_LANSERVER_LOG", LOG_WARNG, L"Detect UnknownServer %d Login Try", pServer->iServerNo);
@@ -344,7 +337,8 @@ void CMonitorLanServer::proc_PACKET_SS_MONITOR_DATA_UPDATE(UINT64 SessionID, CNP
 	//dfMONITOR_DATA_TYPE_CHAT_PACKET_POOL,                       // 채팅서버 패킷풀 사용량
 	//dfMONITOR_DATA_TYPE_CHAT_SESSION,                           // 채팅서버 접속 세션전체
 	//dfMONITOR_DATA_TYPE_CHAT_PLAYER,                            // 채팅서버 로그인을 성공한 전체 인원
-	//dfMONITOR_DATA_TYPE_CHAT_ROOM                               // 배틀서버 방 수
+	//dfMONITOR_DATA_TYPE_CHAT_UPDATEMSG_POOL,
+	//dfMONITOR_DATA_TYPE_CHAT_UPDATEMSG_TPS
 	case dfMONITOR_DATA_TYPE_CHAT_SERVER_ON:
 		*pPacket >> _bOnChatServer;
 		break;
@@ -362,6 +356,12 @@ void CMonitorLanServer::proc_PACKET_SS_MONITOR_DATA_UPDATE(UINT64 SessionID, CNP
 		break;
 	case dfMONITOR_DATA_TYPE_CHAT_PLAYER:
 		*pPacket >> _iSessionLogin_Chat;
+		break;
+	case dfMONITOR_DATA_TYPE_CHAT_UPDATEMSG_POOL:
+		*pPacket >> _iMsgPool_Chat;
+		break;
+	case dfMONITOR_DATA_TYPE_CHAT_UPDATEMSG_TPS:
+		*pPacket >> _iMsgTps_Chat;
 		break;
 
 	//////////////////////////////////////////////////////////////////////////

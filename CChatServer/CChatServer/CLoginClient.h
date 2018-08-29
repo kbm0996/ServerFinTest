@@ -15,7 +15,7 @@ class CLoginClient : public CLanClient
 	enum en_LOGIN_CLIENT
 	{
 		// st_LOGIN_INFO 삭제 간격
-		en_INFO_TIMEOUT = 30000
+		en_INFO_TIMEOUT = 60000
 	};
 
 	struct st_LOGIN_INFO

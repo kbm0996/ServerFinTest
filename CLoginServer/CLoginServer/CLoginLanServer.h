@@ -32,7 +32,7 @@ private:
 	//
 	//////////////////////////////////////////////////////////////////////////
 	// Server to Server
-	void ReqLoginServerLogin(UINT64 iSessionID, CNPacket *pPacket);
+	void proc_PACKET_SS_LOGINSERVER_LOGIN(UINT64 iSessionID, CNPacket *pPacket);
 
 	// 다른 서버로부터 Client 최종 접속 통지
 	/* LanServer ::*/void proc_PACKET_SS_RES_NEW_CLIENT_LOGIN(UINT64 iSessionID, CNPacket *pPacket);

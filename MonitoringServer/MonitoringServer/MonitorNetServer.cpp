@@ -130,7 +130,6 @@ void CMonitorNetServer::Monitoring_Console()
 		wprintf(L" Login Server\n");
 		wprintf(L"===========================================\n");
 		wprintf(L" - SESSION		: %d\n", _pLanServer->_iSessionAll_Login);
-		//wprintf(L" - LoginSuccess Cnt	: %d\n", _pLanServer->_iSessionSuccess_Login);
 		wprintf(L" - LoginSuccess TPS	: %d\n", _pLanServer->_iLoginSuccessTps_Login);
 		wprintf(L"\n");
 		wprintf(L" - Packet Pool		: %d\n", _pLanServer->_iPacketPool_Login);
@@ -144,6 +143,8 @@ void CMonitorNetServer::Monitoring_Console()
 		wprintf(L"===========================================\n");
 		wprintf(L" - SESSION		: %d\n", _pLanServer->_iSessionAll_Chat);
 		wprintf(L" - PLAYER		: %d\n", _pLanServer->_iSessionLogin_Chat);
+		wprintf(L" - MSG Pool		: %d\n", _pLanServer->_iMsgPool_Chat);
+		wprintf(L" - MSG TPS		: %d\n", _pLanServer->_iMsgTps_Chat);
 		wprintf(L"\n");
 		wprintf(L" - Packet Pool		: %d\n", _pLanServer->_iPacketPool_Chat);
 		wprintf(L" - CPU Usage		: %d\n", _pLanServer->_iCpuUsage_Chat);
@@ -328,13 +329,16 @@ void CMonitorNetServer::UpdateClient()
 		//dfMONITOR_DATA_TYPE_CHAT_PACKET_POOL,                       // 채팅서버 패킷풀 사용량
 		//dfMONITOR_DATA_TYPE_CHAT_SESSION,                           // 채팅서버 접속 세션전체
 		//dfMONITOR_DATA_TYPE_CHAT_PLAYER,                            // 채팅서버 로그인을 성공한 전체 인원
-		//dfMONITOR_DATA_TYPE_CHAT_ROOM                               // 배틀서버 방 수
+		//dfMONITOR_DATA_TYPE_CHAT_UPDATEMSG_POOL,
+		//dfMONITOR_DATA_TYPE_CHAT_UPDATEMSG_TPS
 		SendData(dfMONITOR_SERVER_TYPE_CHAT, dfMONITOR_DATA_TYPE_CHAT_SERVER_ON, _pLanServer->_bOnChatServer);
 		SendData(dfMONITOR_SERVER_TYPE_CHAT, dfMONITOR_DATA_TYPE_CHAT_CPU, _pLanServer->_iCpuUsage_Chat);
 		SendData(dfMONITOR_SERVER_TYPE_CHAT, dfMONITOR_DATA_TYPE_CHAT_MEMORY_COMMIT, _pLanServer->_iCommitMemory_Chat);
 		SendData(dfMONITOR_SERVER_TYPE_CHAT, dfMONITOR_DATA_TYPE_CHAT_PACKET_POOL, _pLanServer->_iPacketPool_Chat);
 		SendData(dfMONITOR_SERVER_TYPE_CHAT, dfMONITOR_DATA_TYPE_CHAT_SESSION, _pLanServer->_iSessionAll_Chat);
 		SendData(dfMONITOR_SERVER_TYPE_CHAT, dfMONITOR_DATA_TYPE_CHAT_PLAYER, _pLanServer->_iSessionLogin_Chat);
+		SendData(dfMONITOR_SERVER_TYPE_CHAT, dfMONITOR_DATA_TYPE_CHAT_UPDATEMSG_POOL, _pLanServer->_iMsgPool_Chat);
+		SendData(dfMONITOR_SERVER_TYPE_CHAT, dfMONITOR_DATA_TYPE_CHAT_UPDATEMSG_TPS, _pLanServer->_iMsgTps_Chat);
 	}
 }
 
