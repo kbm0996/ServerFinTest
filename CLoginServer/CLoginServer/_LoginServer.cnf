@@ -58,6 +58,7 @@
 	DB_IP		= "127.0.0.1"
 	DB_ACCOUNT	= "root"
 	DB_PORT		= 3306
-	DB_PASS		= "1234"
+	//DB_PASS		= "1234"
+	DB_PASS		= "gfsad123"
 	DB_NAME		= "accountdb"
 }

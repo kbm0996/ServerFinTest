@@ -144,14 +144,14 @@ private:
 	bool	_bShutdown;
 
 	// Player
-	CLFMemoryPool<st_PLAYER>	_PlayerPool;
+	CLFMemoryPool_TLS<st_PLAYER>	_PlayerPool;
 	map<UINT64, st_PLAYER*>		_PlayerMap;	// SessionID, st_PLAYER*
 
 	// Sector
 	list<st_PLAYER*>			_Sector[en_SECTOR_MAX_Y][en_SECTOR_MAX_X];
 
 	// Message
-	CLFMemoryPool<st_MESSAGE>	_MessagePool;
+	CLFMemoryPool_TLS<st_MESSAGE>	_MessagePool;
 	CLFQueue<st_MESSAGE*>		_MessageQ;
 
 	// Client

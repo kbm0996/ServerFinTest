@@ -162,17 +162,18 @@ void CChatServer::Monitoring()
 	wprintf(L"===========================================\n");
 	wprintf(L" Chat Server\n");
 	wprintf(L"===========================================\n");
-	wprintf(L" - MessagePool		: %d/%d \n", _MessagePool.GetUseSize(), _MessagePool.GetAllocSize());
+	///wprintf(L" - MessagePool		: %d/%d \n", _MessagePool.GetUseSize(), _MessagePool.GetAllocSize());
+	wprintf(L" - MessagePool		: %d \n", _MessagePool.GetUseSize());
 	wprintf(L" - MessageTPS		: %d \n", _lMonitor_UpdateTps);		// UpdateThread 큐 남은 개수
 	wprintf(L"\n");
-	wprintf(L" - PlayerPool		: %d \n", _PlayerPool.GetAllocSize());		// Player 구조체 할당량
+	wprintf(L" - PlayerPool		: %d \n", _PlayerPool.GetUseSize());		// Player 구조체 할당량
 	wprintf(L" - PlayerCount		: %lld \n", _lMonitor_PlayerCnt);	// Contents 파트 Player 개수
 	wprintf(L"\n");
 	wprintf(L" - SessionKey Miss	: %lld \n", _lMonitor_SessionMissCnt);
 	if (_pLoginClient != nullptr)
 		wprintf(L" - LoginMap Size	: %d \n", _pLoginClient->LoginMap_Size());
 
-	CNetServer::PrintState(true, false, true, true);
+	CNetServer::PrintState(true, true, true, true);
 
 	wprintf(L"\n");
 	wprintf(L" - CPU Usage		: %d\n", (int)_CPUTime.ProcessTotal());

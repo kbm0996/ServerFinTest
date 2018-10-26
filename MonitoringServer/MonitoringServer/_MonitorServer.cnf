@@ -43,8 +43,9 @@
 	// DB
 	//-----------------------------------
 	DB_IP		= "127.0.0.1"
-	DB_ACCOUNT	= "kbm0996"
-	DB_PORT		= 6990
-	DB_PASS		= "gfsad1234"
+	DB_ACCOUNT	= "root"
+	DB_PORT		= 3306
+	//DB_PASS		= "1234"
+	DB_PASS		= "gfsad123"
 	DB_NAME		= "status_server"
 }

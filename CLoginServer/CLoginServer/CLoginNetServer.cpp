@@ -148,7 +148,6 @@ void CLoginServer::Monitoring()
 	wprintf(L" Login Net Server\n");
 	wprintf(L"===========================================\n");
 	wprintf(L" - LoginSuccess TPS	: %lld \n", _lMonitor_LoginSuccessTps);		
-	//wprintf(L" - LoginWait		: %d \n");
 	wprintf(L"\n");
 	wprintf(L" - CompleteTime Avr	: %lld \n", lLoginSuccessTime_Avr);
 	wprintf(L"	Min / Max	: %lld / %lld ms\n", _lMonitor_LoginSuccessTime_Min, _lMonitor_LoginSuccessTime_Max);
@@ -185,6 +184,7 @@ void CLoginServer::Monitoring()
 		_pMonitorClient->SendData(dfMONITOR_DATA_TYPE_MATCH_SESSION, _lConnectCnt);
 		_pMonitorClient->SendData(dfMONITOR_DATA_TYPE_MATCH_MATCHSUCCESS, _lMonitor_LoginSuccessTps);
 	}
+	_lMonitor_LoginSuccessTime_Max = 0;
 	_lMonitor_LoginSuccessTps = 0;
 }
 
